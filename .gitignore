@@ -1,0 +1,30 @@
+﻿# Audio data (large, regenerable from metadata via the download script)
+data/audio/
+*.mp3
+*.wav
+
+# Large source CSVs (downloadable from the SONICS dataset)
+data/fake_songs.csv
+data/real_songs.csv
+
+# (subset_splits.csv is intentionally NOT ignored - it's small and it's our artifact)
+
+# Python / Jupyter
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+
+# Environments
+.venv/
+env/
+venv/
+
+# Editor / OS
+.vscode/
+.DS_Store
+Thumbs.db
+
+# SONICS' own pre-made split files (not used - we build our own split)
+data/train.csv
+data/test.csv
+data/valid.csv
