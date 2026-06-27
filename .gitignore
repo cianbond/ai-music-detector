@@ -28,3 +28,5 @@ Thumbs.db
 data/train.csv
 data/test.csv
 data/valid.csv
+
+data/failed_downloads.csv
