@@ -24,9 +24,15 @@ venv/
 .DS_Store
 Thumbs.db
 
-# SONICS' own pre-made split files (not used - we build our own split)
+# SONICS' own pre-made split files (not used. Have built own split)
 data/train.csv
 data/test.csv
 data/valid.csv
 
+# Generated preprocessing outputs
+data/spectrograms/
+   
+# Log of failed downloads
 data/failed_downloads.csv
+
+
