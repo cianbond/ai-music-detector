@@ -23,7 +23,7 @@ def get_clip(file_path, clip_seconds=15):
        Returns None (and warns) if the track is shorter than clip_seconds."""
 
     # load the audio of whatever file path was passed in (y = waveform, sr = sample rate)
-    y, sr = librosa.load(file_path)
+    y, sr = librosa.load(file_path, sr=16000) # resample everything to 16kHz. this is the same fix as baseline.py so both pipelines match
 
     # how many samples is the clip
     clip_len = clip_seconds * sr
@@ -46,7 +46,7 @@ def get_clip(file_path, clip_seconds=15):
     return clip # hand back the finished 15s clip
 
 
-def clip_to_spectrogram(clip, sr=22050, n_mels=128):
+def clip_to_spectrogram(clip, sr=16000, n_mels=128):
 
     """Convert an audio clip into a mel-spectrogram in decibels.
        Returns the spectrogram as a 2D numpy array (n_mels x time frames)."""
