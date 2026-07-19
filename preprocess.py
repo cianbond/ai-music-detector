@@ -92,53 +92,56 @@ def build_audio_path(filename):
 
         return os.path.join("data/audio/real", filename + ".wav") # otherwise it will be a real track which require .wav extension
 
+# Only run the full pipeline when this file is executed directly (python preprocess.py).
+# Importing this file for its functions (like the robustness script does) then it stays silent.
+if __name__ == "__main__":
 
-# Run the pipeline over all of the tracks and save each spectrogram to disk
+    # Run the pipeline over all of the tracks and save each spectrogram to disk
 
-# load the split table (all the tracks with their filename, label and split)
-splits = pd.read_csv("data/subset_splits.csv")
+    # load the split table (all the tracks with their filename, label and split)
+    splits = pd.read_csv("data/subset_splits.csv")
 
-# make the output folder for spectrograms
-os.makedirs("data/spectrograms", exist_ok=True)
+    # make the output folder for spectrograms
+    os.makedirs("data/spectrograms", exist_ok=True)
 
-# counter for saved missing and too short
-saved = 0
+    # counter for saved missing and too short
+    saved = 0
 
-skipped_missing = 0
+    skipped_missing = 0
 
-skipped_short = 0
+    skipped_short = 0
 
-for i, row in splits.iterrows(): # loops over all of the rows
+    for i, row in splits.iterrows(): # loops over all of the rows
 
-    filename = row["filename"] # pull the tracks filename from this row
+        filename = row["filename"] # pull the tracks filename from this row
 
-    audio_path = build_audio_path(filename) # build the full path to the audio file
+        audio_path = build_audio_path(filename) # build the full path to the audio file
 
-    # skip if the audio file isn't on disk (failed download)
-    if not os.path.exists(audio_path): # not flips it so it is if it does not exist
+        # skip if the audio file isn't on disk (failed download)
+        if not os.path.exists(audio_path): # not flips it so it is if it does not exist
 
-        print("MISSING:", filename)
+            print("MISSING:", filename)
 
-        skipped_missing += 1
+            skipped_missing += 1
 
-        continue # jump straight to next file
+            continue # jump straight to next file
 
-    # run the pipeline: path to clip to spectrogram
-    spec = process_file(audio_path)
+        # run the pipeline: path to clip to spectrogram
+        spec = process_file(audio_path)
 
-    # skip if it came back None (too short)
-    if spec is None:
+        # skip if it came back None (too short)
+        if spec is None:
 
-        skipped_short += 1
+            skipped_short += 1
 
-        continue
+            continue
 
-    # save the spectrogram as a .npy file named after the track
-    out_path = os.path.join("data/spectrograms", filename + ".npy")
+        # save the spectrogram as a .npy file named after the track
+        out_path = os.path.join("data/spectrograms", filename + ".npy")
 
-    np.save(out_path, spec)
+        np.save(out_path, spec)
 
-    saved += 1 # count it
+        saved += 1 # count it
 
-# summary of the run from the counters
-print(f"\nDone: saved {saved}, missing {skipped_missing}, too short {skipped_short}")
+    # summary of the run from the counters
+    print(f"\nDone: saved {saved}, missing {skipped_missing}, too short {skipped_short}")
