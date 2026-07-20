@@ -14,6 +14,7 @@ Run from the repo root with python preprocess_robustness.py
 import os
 import numpy as np
 import pandas as pd
+import random
 
 from preprocess import process_file, build_audio_path # borrow the existing pipeline functions (doesn't need to run whole pipeline now thanks to the __main__ guard)
 
@@ -77,3 +78,66 @@ print(f"\nPart 1 done: saved {saved}, skipped {skipped}")
 check = np.load(os.path.join(out_dir, test_reals["filename"].iloc[0] + ".npy"))
 
 print("Sample shape:", check.shape) # expecting (128, 313)
+
+# Part 2: sample 200 fakes per FakeMusicCaps generator (seed 42)
+
+random.seed(42) # fix the raffle drums starting position so the same 200 come out on every run
+
+fmc_root = os.path.join("data", "fakemusiccaps", "FakeMusicCaps") # the folder holding the five generator folders
+
+generators = ["audioldm2", "MusicGen_medium", "musicldm", "mustango", "stable_audio_open"] # the five shelves in a fixed order (order matters for reproducibility)
+
+samples = {} # one entry per generator: its list of 200 picked filenames
+
+for gen in generators: # one lap per shelf
+
+    gen_folder = os.path.join(fmc_root, gen) # this shelfs full address
+
+    all_files = sorted(os.listdir(gen_folder)) # every filename on the shelf in alphabetical order (sorted makes the input identical on any machine)
+
+    picked = random.sample(all_files, 200) # the seeded raffle: draw 200 unique tickets from the drum
+
+    samples[gen] = picked # file this shelfs picks under the generators name
+
+    print(f"{gen}: {len(all_files)} available, {len(picked)} picked, first two: {picked[:2]}")
+
+# Part 2b: run the sampled fakes through the pipeline at 10 seconds and save per generator
+fakes_saved = 0
+
+fakes_skipped = 0
+
+for gen in generators: # one pass per generator
+
+    out_gen = os.path.join("data", "spectrograms_10s", gen) # this generators own output folder (same ids repeat across generators so they cannot share a folder)
+
+    os.makedirs(out_gen, exist_ok=True) # make the folder if it does not exist
+
+    for f in samples[gen]: # one pass per picked file
+
+        wav_path = os.path.join(fmc_root, gen, f) # full path to the source file
+
+        spec = process_file(wav_path, clip_seconds=10) # same pipeline at 10 seconds (a 10 second clip of a 10 second file is the whole file)
+
+        if spec is None: # should not fire: every file is exactly 10 seconds
+
+            fakes_skipped += 1
+
+            continue
+
+        stem = os.path.splitext(f)[0] # drop the .wav extension from the name
+
+        np.save(os.path.join(out_gen, stem + ".npy"), spec) # save under the same id in this generators folder
+
+        fakes_saved += 1
+
+    print(f"{gen}: done")
+
+print(f"\nPart 2 done: saved {fakes_saved}, skipped {fakes_skipped}") # expecting 1000 and 0
+
+# verify one fake spectrogram has the matching shape
+first_name = os.path.splitext(samples["audioldm2"][0])[0] # first picked audioldm2 file without its extension
+
+check_fake = np.load(os.path.join("data", "spectrograms_10s", "audioldm2", first_name + ".npy"))
+
+print("Fake sample shape:", check_fake.shape) # expecting (128, 313) to match the reals
+
