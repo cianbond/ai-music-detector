@@ -30,14 +30,14 @@ print("Test reals found:", len(test_reals)) # 192 on paper (24 of them are faile
 print(test_reals.head()) # first few rows as a sanity check
 
 # keep only the tracks that actually sat the CNN's exam: the ones whose spectrogram exists on disk
-# (failed downloads never got a spectrogram so this mirrors the notebooks ghost matching rule exactly)
+# (failed downloads never got a spectrogram so this matches the notebooks selection rule exactly)
 on_disk = []
 
-for f in test_reals["filename"]: # walk the register name by name
+for f in test_reals["filename"]: # go through each filename in turn
 
-    spec_path = os.path.join("data/spectrograms", f + ".npy") # the pigeonhole where that tracks spectrogram would live
+    spec_path = os.path.join("data/spectrograms", f + ".npy") # the path where that tracks spectrogram would be if it exists
 
-    on_disk.append(os.path.exists(spec_path)) # True if a file is really in the hole and False if its a ghost
+    on_disk.append(os.path.exists(spec_path)) # True if the file exists on disk and False if it is missing
 
 test_reals = test_reals[on_disk] # keep only the rows whose verdict is True
 
@@ -52,11 +52,11 @@ saved = 0
 
 skipped = 0
 
-for f in test_reals["filename"]: # one lap per register name
+for f in test_reals["filename"]: # one pass per filename
 
     audio_path = build_audio_path(f) # the address finder from preprocess.py (real_ names point at data/audio/real)
 
-    spec = process_file(audio_path, clip_seconds=10) # the whole pipeline in one call but with the dial turned to 10 seconds
+    spec = process_file(audio_path, clip_seconds=10) # the whole pipeline in one call, set to a 10 second clip
 
     if spec is None: # too short for even 10 seconds (should never fire here as these all managed 15)
 
@@ -81,23 +81,23 @@ print("Sample shape:", check.shape) # expecting (128, 313)
 
 # Part 2: sample 200 fakes per FakeMusicCaps generator (seed 42)
 
-random.seed(42) # fix the raffle drums starting position so the same 200 come out on every run
+random.seed(42) # fix the random seed so the same 200 files are picked on every run
 
 fmc_root = os.path.join("data", "fakemusiccaps", "FakeMusicCaps") # the folder holding the five generator folders
 
-generators = ["audioldm2", "MusicGen_medium", "musicldm", "mustango", "stable_audio_open"] # the five shelves in a fixed order (order matters for reproducibility)
+generators = ["audioldm2", "MusicGen_medium", "musicldm", "mustango", "stable_audio_open"] # the five generators in a fixed order (order matters for reproducibility)
 
 samples = {} # one entry per generator: its list of 200 picked filenames
 
-for gen in generators: # one lap per shelf
+for gen in generators: # one pass per generator
 
-    gen_folder = os.path.join(fmc_root, gen) # this shelfs full address
+    gen_folder = os.path.join(fmc_root, gen) # this generators full folder path
 
-    all_files = sorted(os.listdir(gen_folder)) # every filename on the shelf in alphabetical order (sorted makes the input identical on any machine)
+    all_files = sorted(os.listdir(gen_folder)) # every filename in this folder in alphabetical order (sorted makes the input identical on any machine)
 
-    picked = random.sample(all_files, 200) # the seeded raffle: draw 200 unique tickets from the drum
+    picked = random.sample(all_files, 200) # pick 200 unique files at random (seeded above for reproducibility)
 
-    samples[gen] = picked # file this shelfs picks under the generators name
+    samples[gen] = picked # store this generators picked files under its name
 
     print(f"{gen}: {len(all_files)} available, {len(picked)} picked, first two: {picked[:2]}")
 
