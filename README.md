@@ -14,13 +14,13 @@ model a degree of explainability and interpretability.
 A Flask web application wraps the trained model so a user can upload a track and get a prediction in the browser. Each prediction is stored in a PostgreSQL database.
 
 ## Key results
-The CNN reaches 99.7% accuracy on a held out test set of Suno and Udio tracks, and a train vs test gap of 0.14% shows it did not overfit.
+The CNN reaches 99.7% accuracy on a held out test set of Suno and Udio tracks. A train vs test gap of 0.14% shows it did not memorise its training tracks though as the robustness results below show, it did specialise to the generators it was trained on.
 
 On generators it never saw during training its recall drops to between 10% and 43%, which shows it learned features specific to Suno and Udio rather than a general notion of AI-generated music.
 
-Under degraded audio the model is fragile. Noise and pitch shifting collapse F1 from 1.00 to 0.08. Compression is better tolerated at 0.69.
+Under degraded audio (tested on a balanced sample of 40 test tracks) the model is fragile but it fails in two opposite directions. Noise and pitch shifting collapse F1 from 1.00 to 0.08 by pushing the model to classify almost everything as human made. Bandwidth reduction (an 8 kHz resample) pushes it the other way classifying almost everything as AI-generated: its F1 of 0.69 reflects only the fake class and masks an accuracy of 0.55 below chance for this sample. Rather than gently blurring the decision boundary each form of degradation shifts the models operating point sharply to one class or the other.
 
-The Grad-CAM visualisations support all of this. Attention is strong and consistent on the generators the model was trained on and weak on the ones it was not.
+The Grad-CAM visualisations are consistent with this picture. On Suno and Udio tracks the models attention sits over consistent spectral regions whereas on unseen generators it is more scattered. Because each heat map is normalised to its own maximum, the maps show where attention falls and how concentrated it is rather than its absolute strength.
 
 ## Dataset
 This project uses the SONICS dataset (Rahman et al., 2025 — arXiv:2408.14080).
@@ -51,6 +51,7 @@ FakeMusicCaps is used as a held out cross generator test set. Generators the mod
     ├── explore_data.ipynb        # data loading, exploration, train/val/test split
     ├── download_metadata.py      # downloads the SONICS metadata CSVs
     ├── download_audio.py         # downloads the real tracks with yt-dlp
+    ├── download_fake.py          # downloads / prepares the AI-generated tracks
     ├── preprocess.py             # turns audio into mel spectrograms
     ├── baseline.py               # the classical Random Forest / SVM baseline
     ├── cnn_training.ipynb        # CNN training and evaluation (transfer learning)
