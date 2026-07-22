@@ -98,7 +98,7 @@ The web application needs PostgreSQL installed and running and the trained model
 
 5. Open http://127.0.0.1:5000 in a browser and upload a track.
 
-> The model file is not included in this repository because of its size. It is produced by running cnn_training.ipynb.
+> The trained model file is not committed to the repository because of its size. It can be downloaded directly from the [v1.0 release](https://github.com/cianbond/ai-music-detector/releases/download/v1.0/cnn_resnet18_best.pth) and placed in the project root or reproduced by running cnn_training.ipynb.
 
 ## Reproducing the pipeline
 1. Download the audio (real tracks via yt-dlp, AI tracks from SONICS).
