@@ -69,7 +69,12 @@ def index():
 def predict():
 
     # grab the uploaded file from the form
-    uploaded = request.files["audio"]
+    uploaded = request.files.get("audio")
+
+    # guard: no file chosen (the browser still sends an empty part, so check the name)
+    if uploaded is None or uploaded.filename == "":
+
+        return render_template("index.html", result="No file selected. Please choose an audio track.")
 
     # save it to a temporary file on disk so librosa can read it (keep the original extension)
     suffix = os.path.splitext(uploaded.filename)[1]  # e.g. ".wav" or ".mp3"
@@ -81,9 +86,18 @@ def predict():
         tmp_path = tmp.name
 
     # turn the audio into a spectrogram (same pipeline as training: centred 15s clip, mel-spectrogram)
-    spec = process_file(tmp_path)
+    # librosa raises on files it cannot decode so reject those with a message (FR-009)
+    try:
 
-    os.remove(tmp_path)  # tidy up the temp file now we have the spectrogram
+        spec = process_file(tmp_path)
+
+    except Exception:
+
+        return render_template("index.html", result="Unsupported or unreadable audio file. Please upload a valid track such as .wav or .mp3.")
+
+    finally:
+
+        os.remove(tmp_path)  # tidy up the temp file whether the pipeline worked or not
 
     # guard: process_file returns None if the track was too short for a full clip
     if spec is None:
@@ -115,7 +129,15 @@ def predict():
 
     result = f"{verdict}  (confidence: {confidence:.1f}%)"
 
-    save_prediction(uploaded.filename, verdict, confidence) # write this prediction to the database
+    # write this prediction to the database. if the database is down keep the
+    # verdict on screen and report the problem in the terminal instead of crashing
+    try:
+
+        save_prediction(uploaded.filename, verdict, confidence)
+
+    except Exception as e:
+
+        print("Warning: could not save prediction to the database:", e)
 
     return render_template("index.html", result=result, filename=uploaded.filename)
 
