@@ -37,6 +37,7 @@ spectrograms_10s.zip
 data/fakemusiccaps/
 __MACOSX/
 cnn_resnet18_best.pth
+.env
    
 # (failed_downloads.csv is intentionally tracked and the 277 reals that failed to download are documented)
 
