@@ -38,6 +38,7 @@ data/fakemusiccaps/
 __MACOSX/
 cnn_resnet18_best.pth
 .env
+sample_audio/
    
 # (failed_downloads.csv is intentionally tracked and the 277 reals that failed to download are documented)
 
